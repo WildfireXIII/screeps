@@ -1,0 +1,28 @@
+ENERGY MINING
+==============
+
+An energy source contains 3000 energy in it
+
+regenerates every 300 ticks
+each WORK part takes 2 resources per tick 
+
+
+::formula::
+
+WP = work parts
+MA = mine actions
+
+(3000/2) = MA
+(MA/300) = WP
+
+WP = 5?
+
+5 * 2 * 300
+
+
+every carry part only carries 50 energy
+
+
+
+
+NOTE: if energy is just sitting around, it decays at one resource per tick

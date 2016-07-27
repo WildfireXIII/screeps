@@ -1,6 +1,7 @@
 // module for quick console functionality
 module.exports = 
 {
+
 	api()
 	{
 		console.log("report() - lists creeps and current jobs")
