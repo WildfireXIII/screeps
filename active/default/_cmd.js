@@ -46,7 +46,5 @@ module.exports =
 
 		if (secs < 10) { secs = "0" + secs; }
 		return mins + ":" + secs;
-	},
-
-	randomtest() { console.log("Well, hello there!"); }
+	}
 };
