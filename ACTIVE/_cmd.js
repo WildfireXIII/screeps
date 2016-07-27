@@ -1,7 +1,6 @@
 // module for quick console functionality
 module.exports = 
 {
-
 	api()
 	{
 		console.log("report() - lists creeps and current jobs")
@@ -47,5 +46,7 @@ module.exports =
 
 		if (secs < 10) { secs = "0" + secs; }
 		return mins + ":" + secs;
-	}
+	},
+
+	randomtest() { console.log("Well, hello there!"); }
 };
