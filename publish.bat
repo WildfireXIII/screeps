@@ -1,14 +1,11 @@
 @echo off
-rem C:\Users\Nathan\AppData\Local\Screeps\scripts\screeps.com 
-
 
 rem get the path of the screeps.com folder from a local file pubpath.dat
 set /p SCREEPSPATH=<pubpath.dat
 
-rem delete everything that's currently there, except for the .sync file, cause that looks important
+rem delete all current folders (so can be replaced)
 pushd %SCREEPSPATH%
-copy .sync ..\ 
-del /qs *
+rd /s /q .\
 popd 
  
 xcopy /sy "src\*" %SCREEPSPATH%
