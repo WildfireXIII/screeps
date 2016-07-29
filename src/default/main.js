@@ -39,7 +39,7 @@ module.exports.loop = function ()
 			if (hostiles[0])
 			{
 				structure.attack(hostiles[0]);
-				Game.notify("Attacking hostile! Tick " + Game.time);
+				//Game.notify("Attacking hostile! Tick " + Game.time);
 			}
 		}
     }
