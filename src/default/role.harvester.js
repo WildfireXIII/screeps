@@ -41,7 +41,9 @@ module.exports =
 		if (creep.memory.task == "harvest")
 		{
 			var sources = creep.room.find(FIND_SOURCES);
-			if (creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) { creep.moveTo(sources[0]); }
+			var source = sources[0];
+			if (sources[0].energy == 0) source = sources[1];
+			if (creep.harvest(source) == ERR_NOT_IN_RANGE) { creep.moveTo(source); }
 			if (creep.carry.energy == creep.carryCapacity) { creep.memory.task = "NOTASK"; }
 		}
 		else if (creep.memory.task == "fillspawn")

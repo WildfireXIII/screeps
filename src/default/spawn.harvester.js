@@ -15,6 +15,8 @@
 
 // advanced worker = WORK WORK CARRY CARRY MOVE MOVE MOVE MOVE (100 100 50 50 50 50 50 50 = 500)
 
+// REALLY advanced worker = WORK WORK WORK WORK WORK CARRY CARRY CARRY CARRY MOVE MOVE MOVE MOVE MOVE move move move move (650 + 500 = 1150
+
 // when roads are built and movement is less of an issue:
 // shortcut worker = WORK WORK WORK CARRY CARRY CARRY MOVE (100 100 100 50 50 50 50 = 500)
 
@@ -25,7 +27,11 @@ module.exports =
 	spawn(spawner)
 	{
 		// if have enough energy, make a big guy!
-		if (spawner.room.energyAvailable >= 500)
+		if (spawner.room.energyAvailable >= 1150)
+		{
+		    spawner.createCreep([MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, CARRY, CARRY, CARRY, CARRY, WORK, WORK, WORK, WORK, WORK], null, { role: "worker_super", task: "NOTASK"});
+		}
+		else if (spawner.room.energyAvailable >= 500)
 		{
 			spawner.createCreep([MOVE, MOVE, MOVE, MOVE, CARRY, CARRY, WORK, WORK], null, { role: "worker_advanced", task: "NOTASK"});
 		}
