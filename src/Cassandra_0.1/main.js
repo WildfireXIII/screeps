@@ -57,6 +57,54 @@ function findFreeSurrounding(room, target_x, target_y)
 	return free;
 }
 
+// returns array of arrays of room positions that are connected to eachother
+function breakIntoConnecting(positionsList)
+{
+	var positionSeries = [];
+	for (var i in positionsList)
+	{
+		var pos = positionsList[i];
+		console.log("Checking pos " + pos);
+		// check against everything already added
+		var foundMatchingSeries = false; // set this to true if added an existing series
+		for (var series in positionSeries)
+		{
+			console.log("\tChecking in series " + series);
+			for (var pindex in positionSeries[series])
+			{
+				//console.log("\t\tChecking against
+				var p = positionSeries[series][pindex];
+				var difX = Math.abs(p.x - pos.x);
+				var difY = Math.abs(p.y - pos.y);
+				console.log("difX: " + difX);
+				console.log("difY: " + difY);
+				if ((difX == 0 && difY == 1) || (difX == 1 && difY == 0))
+				{
+					console.log("Yup, it's a match");
+					positionSeries[series].push(pos);
+					console.log(positionSeries[series]);
+					foundMatchingSeries = true;
+					continue;
+				}
+			}
+		}
+
+		// NOTE: technically foundMatchingSeries is unnecessary because of
+		// continue statement in loop above
+		
+		// create a new series if no matching found
+		if (!foundMatchingSeries)
+		{
+			console.log("No matching series, starting new...");
+			var newSeries = [pos];
+			positionSeries.push(newSeries);
+			continue;
+		}
+	}
+
+	return positionSeries;
+}
+
 
 //================================================================
 //	TIER 1
@@ -71,35 +119,36 @@ function runT1POI(room)
 	//if (room.memory.t1poi == true) { return; }
 	//room.memory.t1poi = true;
 	
-	const sources = room.find(FIND_SOURCES);
+	// fill sources with list of room positions
+	const sources = room.find(FIND_SOURCES); 
 	for (var i in sources) 
 	{ 
+		//i = 
+		i = 2;
+		console.log(i);
 		// find all energy sources
 		console.log("Source: " + sources[i]); 
 		var source = sources[i];
 		var spx = source.pos.x;
 		var spy = source.pos.y;
 
-		// check all squares around it for available
-		var free = [];
-		for (var y = spy - 1; y <= spy + 1; y++)
-		{
-			for (var x = spx - 1; x <= spx + 1; x++)
-			{
-				if (x == spx && y == spy) { continue; }
-				
-				// look at the terrain type, add to free if plain or swamp (not wall)
-				const terrain_type = room.lookForAt(LOOK_TERRAIN, x, y);
-				if (terrain_type != "wall") { free.push(new RoomPosition(x, y, room.name)); }
-			}
-		}
+		// check all squares around it for available (room positions)
+		var free = findFreeSurrounding(room, source.pos.x, source.pos.y);
 
-		for (var j in free)
+		//for (var j in free) { console.log("We found a free spot around this source at " + free[j]); }
+		
+		// determine connected parts
+		var freeSeries = breakIntoConnecting(free);
+		//console.log(freeSeries);
+		for (var series in freeSeries)
 		{
-			console.log("We found a free spot around this source at " + free[j]);
+			console.log("Series:");
+			for (var entry in freeSeries[series]) { console.log("\t" + freeSeries[series][entry]); }
 		}
 		
-		console.log(source.pos);
+		if (i > -100) { return; } // debug, obviously, don't overwhelm my console please
+		
+		//console.log(source.pos);
 	}
 	
 	/*const minerals = room.find(FIND_MINERALS);
