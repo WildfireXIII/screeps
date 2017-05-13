@@ -1,2 +1,5 @@
 pubpath.dat
 .sync
+.screeps.json
+dist/*
+node_modules/*
