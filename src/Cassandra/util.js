@@ -2,6 +2,15 @@
 //	UTILITY
 //================================================================
 
+// submit a request to queue for manual review
+// NOTE: completionActionParameters is an array
+// urgency levels: !!!,!!,!,*,-,--,---
+function submitTier13Request(source, text, urgency, completionAction, completionActionParameters)
+{
+	if (Memory.Tier13Requests == undefined) { Memory.Tier13Requests = []; }
+	Memory.Tier13Requests.push({"source": source, "text": text, "urgency": urgency, "action": completionAction, "actionParams": completionActionParameters, "time": Game.time});
+}
+
 // returns array of room positions of non-wall terrain surrounding a spot
 // NOTE: does not check for entities, only terrain!
 function findFreeSurrounding(room, target_x, target_y)

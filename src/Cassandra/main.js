@@ -9,7 +9,7 @@ var rooms = ["sim"];
 
 module.exports.loop = function()
 {
-	if (Memory.testing == true) { runTest(); }
+	if (Memory.testing == true) { runTests(); }
 	//hello();
 }
 
