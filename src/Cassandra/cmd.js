@@ -25,8 +25,20 @@ global.tier13RequestList = function()
 		var displayString = entry_i + ". (" + entry.urgency + ") [" + entry.source + "::" + entry.time + "] - " + entry.text;
 		console.log(displayString);
 	}
+
+	if (Memory.Tier13Request.length == 0)
+	{
+		console.log("No requests currently...");
+	}
 };
 
 
  // TODO: need a function to mark tier 13 request complete, and then handle
  // running whatever code needs to be run afterwards
+
+global.tier13CompleteRequest = function(index)
+{
+	Memory.Tier13Requests.splice(index, 1);
+	console.log("Marking request " + index + " as completed...");
+}
+
