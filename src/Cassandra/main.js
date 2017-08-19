@@ -12,7 +12,11 @@ var VERSION_DATE = "8/19/2017";
 module.exports.loop = function()
 {
 	// check that Cassandra is initialized
-	if (Memory.Cassandra == null) { warning("Cassandra not initialized..."); }
+	if (Memory.Cassandra == null) 
+	{ 
+		warning("Cassandra not initialized..."); 
+		initializeCassandra();
+	}
 
 
 
