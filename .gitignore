@@ -3,3 +3,4 @@ pubpath.dat
 .screeps.json
 dist/*
 node_modules/*
+*.swp

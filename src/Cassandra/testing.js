@@ -1,3 +1,5 @@
+// -- old --
+
 //================================================================
 //	TESTS
 //================================================================
@@ -24,3 +26,5 @@ function testTier13Request()
 	submitTier13Request("testing", "This is just a test, no action required", "---", null, null);
 	console.log("Submitted Tier 13 request");
 }
+
+// -- /old --
