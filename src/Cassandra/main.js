@@ -11,6 +11,8 @@ var VERSION_DATE = "8/19/2017";
 
 module.exports.loop = function()
 {
+	ticCleanup();
+	
 	// check that Cassandra is initialized
 	if (Memory.Cassandra == null) 
 	{ 
@@ -18,15 +20,15 @@ module.exports.loop = function()
 		initializeCassandra();
 	}
 
-
+	if (Memory.Cassandra.phase == 0) { p0Manager(); }
 
 	
 	//if (Memory.testing == true) { runTests(); }
-	//hello();
 }
 
 
-function hello()
+function ticCleanup()
 {
-	console.log("Hello there!");
+	// delete any dead creeps from memory
+	for (var i in Memory.creeps) { if (!Game.creeps[i]) { delete Memory.creeps[i]; } }
 }

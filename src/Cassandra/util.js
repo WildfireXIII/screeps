@@ -1,3 +1,20 @@
+function zeroify(num) 
+{ 
+	if (num < 10) { return "0" + num; } 
+	return num;
+}
+function timestamp()
+{
+	var d = new Date(Date.now());
+
+	var datestring = zeroify(d.getMonth() - 1) + "/" + 
+		zeroify(d.getDate()) + "/" + 
+		zeroify(d.getFullYear()) + " " + 
+		zeroify(d.getHours()) + ":" + 
+		zeroify(d.getMinutes()) + ":" + 
+		zeroify(d.getSeconds());
+	return datestring;
+}
 
 
 

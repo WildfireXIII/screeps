@@ -1,21 +1,33 @@
-function initializeCassandra()
+function enterP0()
 {
-	log("Initializing Cassandra " + VERSION + "...", 0)
-	printSplash();
-	Memory.Cassandra = {}
-	log("Cassandra activation date: " + timestamp())
-	log("Setting state to 'Active'")
-	Memory.Cassandra.Status = "Active";
-	log("Setting phase to '0'")
-	Memory.Cassandra.Phase = 0;
+	announce("ENTERING PHASE 0");
+	Memory.Cassandra.phase = 0;
+
+	Memory.spawnQueue = [];
 }
 
-function printSplash()
+/*
+
+Stage 0 
+
+*/
+function p0Manager()
 {
-	log("\n" +
-		"_______ _______ _______ _______ _______ __   _ ______   ______ _______\n" + 
-		"|       |_____| |______ |______ |_____| | \\  | |     \\ |_____/ |_____|\n" +
-		"|_____  |     | ______| ______| |     | |  \\_| |_____/ |    \\_ |     |\n\n" +
-		"Version: <font color='#66EEFF'>" + VERSION + "</font> Date: " + VERSION_DATE + "\n" + 
-		"Copyright (c) 2017 Digital Warrior Labs\n");
+	// determine state
+	
+	// determine number of alive creeps
+	var numAlive = Object.keys(Memory.creeps).length;
+
+	//debug(numAlive);
+
+	// spawn 0_m if nobody alive
+	if (numAlive == 0)
+	{
+		log("No workers found, adding miner to spawn queue");
+		
+		log("Spawning phase 0 miner...", 2);
+		Game.spawns['Spawn1'].createCreep([MOVE,MOVE,WORK,CARRY], "0_m");
+	}
+	//debug(rooms[0]);
 }
+
