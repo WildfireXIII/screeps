@@ -7,8 +7,9 @@ function enterP0()
 	Memory.taskQueue = [];
 	Memory.waitFlags = [];
 	
-	addTask("p0mining", 3, {"m":1}, [findNearestSource()], null, ["mine","refill"]);
-	addTask("p0upgrade", 1, {"bm":1}, [Game.rooms[rooms[1]]], null, ["mine","upgrade"]);
+	var source = findNearestSource();
+	addTask("p0mining", 3, {"m":1}, [source, Game.spawns['Spawn1'].pos], null, "refill");
+	addTask("p0upgrade", 1, {"bm":1}, [source, Game.rooms[rooms[1]]], null, "upgrade");
 
 	// check if there's a flag (make this a tier 13 request thing)
 }
@@ -23,10 +24,9 @@ function p0Spawner()
 {
 	if (Memory.spawnQueue.length == 0) { return; }
 	
+	// find highest priority spawn
 	var maxIndex = 0;
 	var maxPriority = Memory.spawnQueue[0].priority;
-
-	// find highest priority spawn
 	for (var i in Memory.spawnQueue)
 	{
 		var spawn = Memory.spawnQueue[i];	
@@ -56,7 +56,28 @@ function p0TaskFulfillmentActuator(creep)
 {
 	var task = Memory.taskQueue[creep.memory.task];
 
-	
+	if (creep.memory.status == "mining")
+	{
+		// check for full carry
+		if (creep.carry[RESOURCE_ENERGY] == creep.carryCapacity)
+		{
+			if (task.details == "refill") { creep.memory.status = "refilling"; }
+			else if (task.details == "upgrade") { creep.memory.status = "upgrading"; }
+			else if (task.details == "build") { creep.memory.status = "building"; }
+			return;
+		}
+
+		// get source structure
+		var source = task.locations[0].lookFor(LOOK_SOURCE);
+		if (creep.harvest(source) == ERR_NOT_IN_RANGE)
+		{
+			creep.moveTo(source.pos); // TODO: inefficient
+		}
+	}
+	else
+	{
+		// check if empty
+	}
 }
 
 // if there are missing slots, add to spawn queue
@@ -120,7 +141,7 @@ function p0Manager()
 	}*/
 }
 
-function addTask(name, priority, types, locations, endType, actions)
+function addTask(name, priority, types, locations, endType, details)
 {
 	var active = {};
 	for (var key in types) { active[key] = 0; }
@@ -135,7 +156,7 @@ function addTask(name, priority, types, locations, endType, actions)
 		"spawning":spawning,
 		"locations":locations,
 		"endType":endType,
-		"actions":actions
+		"details":details
 	};
 	Memory.taskQueue.push(task);
 }
