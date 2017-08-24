@@ -8,8 +8,8 @@ function enterP0()
 	Memory.waitFlags = [];
 	
 	var source = findNearestSource();
-	addTask("p0mining", 3, {"m":1}, [source, Game.spawns['Spawn1'].pos], null, "refill");
-	addTask("p0upgrade", 1, {"bm":1}, [source, Game.rooms[rooms[1]]], null, "upgrade");
+	addTask("p0mining", 3, {"m":1}, [source.id, Game.spawns['Spawn1'].id], null, "refill");
+	addTask("p0upgrade", 1, {"bm":1}, [source.id, Game.rooms['sim'].controller.id], null, "upgrade");
 
 	// check if there's a flag (make this a tier 13 request thing)
 }
@@ -17,7 +17,7 @@ function enterP0()
 function findNearestSource()
 {
 	var source = Game.spawns['Spawn1'].pos.findClosestByRange(FIND_SOURCES);
-	return source.pos;
+	return source;
 }
 
 function p0Spawner()
@@ -40,7 +40,7 @@ function p0Spawner()
 	if (Game.spawns['Spawn1'].canCreateCreep(maxSpawn.body) == OK)
 	{
 		var type = maxSpawn.memory.type;
-		log("Spawning creep of type '" + type + "'...");
+		log("Spawning creep of type '" + type + "'...", 2);
 		Game.spawns['Spawn1'].createCreep(maxSpawn.body, null, maxSpawn.memory);
 
 		// handle task counters
@@ -54,7 +54,7 @@ function p0Spawner()
 
 function p0TaskFulfillmentActuator(creep)
 {
-	var task = Memory.taskQueue[creep.memory.task];
+	var task = Memory.taskQueue[creep.memory.taskindex];
 
 	if (creep.memory.status == "mining")
 	{
@@ -64,11 +64,13 @@ function p0TaskFulfillmentActuator(creep)
 			if (task.details == "refill") { creep.memory.status = "refilling"; }
 			else if (task.details == "upgrade") { creep.memory.status = "upgrading"; }
 			else if (task.details == "build") { creep.memory.status = "building"; }
+			log(creep.name + " has finished gathering energy, and will now proceed in " + creep.memory.status, 3);
+			p0DetermineTaskFulfillment(creep);
 			return;
 		}
 
 		// get source structure
-		var source = task.locations[0].lookFor(LOOK_SOURCE);
+		var source = Game.getObjectById(task.locations[0]);
 		if (creep.harvest(source) == ERR_NOT_IN_RANGE)
 		{
 			creep.moveTo(source.pos); // TODO: inefficient
@@ -77,6 +79,28 @@ function p0TaskFulfillmentActuator(creep)
 	else
 	{
 		// check if empty
+		if (creep.carry[RESOURCE_ENERGY] == 0) 
+		{ 
+			creep.memory.status = "mining";
+			log(creep.name + " has no energy, going to mine...", 3);
+			p0DetermineTaskFulfillment(creep);
+			return; 
+		}
+
+		if (creep.memory.status == "refilling")
+		{
+			var spawn = Game.getObjectById(task.locations[1]);
+			if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) 
+			{ 
+				creep.moveTo(spawn.pos); 
+			}
+		}
+		else if (creep.memory.status == "upgrading")
+		{
+			var controller = Game.getObjectById(task.locations[1]);
+			if (creep.upgradeController(controller) == ERR_NOT_IN_RANGE) { creep.moveTo(controller.pos); }
+		}
+		
 	}
 }
 
@@ -123,6 +147,12 @@ function p0Manager()
 
 	p0DetermineTaskFulfillment();
 	p0Spawner();
+	
+	for (var creepName in Memory.creeps)
+	{
+		var creep = Game.creeps[creepName];
+		p0TaskFulfillmentActuator(creep);
+	}
 
 	// determine number alive of each type
 
@@ -163,6 +193,7 @@ function addTask(name, priority, types, locations, endType, details)
 
 function addSpawn(body, priority, memory, taskindex)
 {
+	memory.taskindex = taskindex;
 	var spawn = {
 		"body":body,
 		"priority":priority,
