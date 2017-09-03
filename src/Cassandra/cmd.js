@@ -38,7 +38,7 @@ global.tier13RequestList = function()
 		console.log(displayString);
 	}
 
-	if (Memory.Tier13Request.length == 0)
+	if (Memory.Tier13Requests.length == 0)
 	{
 		console.log("No requests currently...");
 	}

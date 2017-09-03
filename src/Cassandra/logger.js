@@ -23,7 +23,7 @@ function announce(text)
 // priorities: 0 = normal
 // levels: 0 is high level main loop stuff? 1 = default no extras
 //
-// types: 1 = regular, 0 = system, 2 = spawn, 3 = creep dialog
+// types: 1 = regular, 0 = system, 2 = spawn, 3 = creep dialog, 4 = tier 13
 function log(text, type=1, priority=0)
 {
 	//if (level > Memory.loglvl) { return; }
@@ -31,4 +31,5 @@ function log(text, type=1, priority=0)
 	else if (type == 1) { console.log(text); }
 	else if (type == 2) { console.log("<font color='#FF6622'>" + text + "</font>"); }
 	else if (type == 3) { console.log("<font color='#AA55FF'>" + text + "</font>"); }
+	else if (type == 4) { console.log("<font color='#FFFFFF'>" + text + "</font>"); }
 }

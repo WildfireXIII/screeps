@@ -12,6 +12,28 @@ function enterP0()
 	addTask("p0upgrade", 1, {"bm":1}, [source.id, Game.rooms['sim'].controller.id], null, "upgrade");
 
 	// check if there's a flag (make this a tier 13 request thing)
+	var storageFlag = findStorageFlag(Game.rooms['sim']);
+
+	if (storageFlag == null)
+	{
+		submitTier13Request("Phase 0 entry", "Please place a 'Storage' flag in room", "*", {});
+	}
+}
+
+// returns flag position
+function findStorageFlag(room)
+{
+	var flags = room.find(FIND_FLAGS);
+
+	for (var flagIndex in flags)
+	{
+		var flag = flags[flagIndex];
+		if (flag.name == "Storage")
+		{
+			return flag;
+		}
+	}
+	return null;
 }
 
 function findNearestSource()
