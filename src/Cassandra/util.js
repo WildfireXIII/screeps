@@ -16,11 +16,12 @@ function timestamp()
 	return datestring;
 }
 
-function submitTier13Request(source, text, urgency, data)
+// NOTE: tag is the command word the tier13 completion handlers check for
+function submitTier13Request(source, text, urgency, tag, data)
 {
 	log(" -> " + source + " submitting Tier 13 request", 4);
 	if (Memory.Tier13Requests == undefined) { Memory.Tier13Requests = []; }
-	Memory.Tier13Requests.push({"source": source, "text": text, "urgency": urgency, "data":data, "time": timestamp()});
+	Memory.Tier13Requests.push({"source": source, "text": text, "urgency": urgency, "tag": tag, "data":data, "time": timestamp()});
 }
 
 

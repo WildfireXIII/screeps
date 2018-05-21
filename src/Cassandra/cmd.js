@@ -15,9 +15,11 @@
 //================================================================
 
 global.functionList = [
-	"help",
-	"toggleTesting",
-	"tier13RequestList"
+	"help()",
+	"toggleTesting()",
+	"initialize()",
+	"tier13RequestList()",
+	"tier13CompleteRequest(index)"
 ];
 
 global.help = function() { console.log(functionList); }
@@ -27,6 +29,11 @@ global.toggleTesting = function()
 	if (Memory.testing == true) { Memory.testing = false; console.log("Testing is now off"); }
 	else { Memory.testing = true; console.log("Testing is now on"); }
 };
+
+global.initialize = function()
+{
+	initializeCassandra();
+}
 
 global.tier13RequestList = function()
 {
@@ -50,8 +57,11 @@ global.tier13RequestList = function()
 
 global.tier13CompleteRequest = function(index)
 {
+	var request = Memory.Tier13Requests[index];
 	Memory.Tier13Requests.splice(index, 1);
-	console.log("Marking request " + index + " as completed...");
+	log("Marking request " + index + " as completed...", 4);
+
+	if (request.source == "P0") { p0Tier13Completion(request.tag); }
 }
 
 // -- /old --

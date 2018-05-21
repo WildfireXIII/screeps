@@ -5,18 +5,18 @@ function enterP0()
 
 	Memory.spawnQueue = [];
 	Memory.taskQueue = [];
-	Memory.waitFlags = [];
+	Memory.waitFlags = {};
 	
 	var source = findNearestSource();
-	addTask("p0mining", 3, {"m":1}, [source.id, Game.spawns['Spawn1'].id], null, "refill");
-	addTask("p0upgrade", 1, {"bm":1}, [source.id, Game.rooms['sim'].controller.id], null, "upgrade");
+	addTask("p0mining", 2, {"bm":1}, [source.id, Game.spawns['Spawn1'].id], null, false, "refill");
+	addTask("p0upgrade", 1, {"bm":1}, [source.id, Game.rooms['sim'].controller.id], null, false, "upgrade");
 
 	// check if there's a flag (make this a tier 13 request thing)
 	var storageFlag = findStorageFlag(Game.rooms['sim']);
 
 	if (storageFlag == null)
 	{
-		submitTier13Request("Phase 0 entry", "Please place a 'Storage' flag in room", "*", {});
+		submitTier13Request("P0", "Please place a 'Storage' flag in room", "*", "storage", {});
 	}
 }
 
@@ -42,6 +42,53 @@ function findNearestSource()
 	return source;
 }
 
+function planBasicStorage()
+{
+	log("Placing container construction site");
+	var storageFlag = findStorageFlag(Game.rooms['sim']);
+	debug(storageFlag, "");
+
+	// create the construction site
+	var result = Game.rooms['sim'].createConstructionSite(storageFlag.pos.x, storageFlag.pos.y, STRUCTURE_CONTAINER, "rstore_0");  // NOTE: it auto gets pos from storageflag
+	debug("Result: " + result, "");
+
+	
+	Memory.waitFlags.storageConstructionSite = false;
+	
+}
+
+// NOTE: watches always run every tick, even if the handlers don't
+function p0WaitFlagsWatch()
+{
+	if (Memory.waitFlags.storageConstructionSite != undefined)
+	{
+		var storageFlag = findStorageFlag(Game.rooms['sim']);
+		var site = Game.rooms['sim'].lookForAt(LOOK_CONSTRUCTION_SITES, storageFlag.pos.x, storageFlag.pos.y)[0];
+		if (site != undefined) { Memory.waitFlags.storageConstructionSite = true; }
+	}
+}
+
+function p0WaitFlags()
+{
+	if (Memory.waitFlags.storageConstructionSite)
+	{
+		log("Storage construction site wait flag handled");
+		
+		// get construction site's ID
+		var storageFlag = findStorageFlag(Game.rooms['sim']);
+		var site = Game.rooms['sim'].lookForAt(LOOK_CONSTRUCTION_SITES, storageFlag.pos.x, storageFlag.pos.y)[0];
+		debug(site, "");
+		
+		// add the task 
+		var source = findNearestSource();
+		addTask("p0BuildStorage0", 3, {"bm":1}, [source.id, site.id], null, false, "build");
+
+		Memory.waitFlags.storageConstructionSite = undefined;
+	}
+}
+
+// TODO: it looks like this doesn't have handling for if the highest priority
+// creep can't be spawned
 function p0Spawner()
 {
 	if (Memory.spawnQueue.length == 0) { return; }
@@ -71,6 +118,15 @@ function p0Spawner()
 		
 		// remove from spawn queue
 		Memory.spawnQueue.splice(maxIndex, 1);
+	}
+}
+
+function p0Tier13Completion(tag)
+{
+	if (tag == "storage")
+	{
+		log("Tier 13 has granted storage flag");
+		planBasicStorage();
 	}
 }
 
@@ -112,9 +168,12 @@ function p0TaskFulfillmentActuator(creep)
 		if (creep.memory.status == "refilling")
 		{
 			var spawn = Game.getObjectById(task.locations[1]);
-			if (creep.transfer(spawn, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) 
-			{ 
-				creep.moveTo(spawn.pos); 
+			var transferAttempt = creep.transfer(spawn, RESOURCE_ENERGY);
+			if (transferAttempt == ERR_NOT_IN_RANGE) { creep.moveTo(spawn.pos); }
+			else if (transferAttempt == ERR_FULL)
+			{
+				task.blocked = true;
+				//creep.task
 			}
 		}
 		else if (creep.memory.status == "upgrading")
@@ -122,26 +181,119 @@ function p0TaskFulfillmentActuator(creep)
 			var controller = Game.getObjectById(task.locations[1]);
 			if (creep.upgradeController(controller) == ERR_NOT_IN_RANGE) { creep.moveTo(controller.pos); }
 		}
-		
+		else if (creep.memory.status == "building")
+		{
+			var site = Game.getObjectById(task.locations[1]);
+			if (creep.build(site) == ERR_NOT_IN_RANGE) { creep.moveTo(site.pos); }
+		}
 	}
 }
 
-// if there are missing slots, add to spawn queue
+/*function p0ReassignCreep(creep)
+{
+	// first check for any jobs missing
+}*/
+
+function findCreepsOfTask(taskindex)
+{
+	creeps = [];
+	for (var creepName in Memory.creeps)
+	{
+		creep = Memory.creeps[creepName];
+		if (creep.taskindex == i)
+		{
+			creeps.push(creep);
+		}
+	}
+	return creeps;
+}
+
+// if there are missing slots, add to spawn queue (or divert from tasks with
+// extra, if possible)
 function p0DetermineTaskFulfillment()
 {
+	var prioritySurplus = {}; // ones who don't have a job to do at all (MUST be assigned to something else)
+	var surplus = {}; // optionally can draw from, if task priority is higher
+
+	var demand = {};
+	
+	// surplus scan
 	for (var i in Memory.taskQueue)
 	{
 		var task = Memory.taskQueue[i];
+
+		if (task.blocked)
+		{
+			var hasSurplus = false;
+			for (var key in task.active)
+			{
+				if (task.active[key] > 0)
+				{
+					log("Active '" + key + "' workers found on a blocked task...");
+					hasSurplus = true;
+				}
+			}
+			
+			if (hasSurplus)
+			{
+				// find all creeps associated with this task
+				/*for (var creepName in Memory.creeps)
+				{
+					creep = Memory.creeps[creepName];
+					if (creep.taskindex == i)
+					{
+						var type = creep.type;
+						if (prioritySurplus[type] == undefined) { prioritySurplus[type] == []; }
+						prioritySurplus[type].push(creep);
+						log(creepName + " added to priority surplus list", 3);
+						task.active[type]--;
+					}
+				}*/
+				creeps = findCreepsOfTask(i);
+				for (var j in creeps)
+				{ 
+					var creep = creeps[j];
+					
+					var type = creep.type;
+					if (prioritySurplus[type] == undefined) { prioritySurplus[type] == []; }
+					prioritySurplus[type].push(creep);
+					log(creepName + " added to priority surplus list", 3);
+					task.active[type]--;
+				}
+			}
+			continue;	
+		}
+
+
 		for (var key in task["types"])
 		{
 			var required = task["types"][key];
 			var fulfillment = task["active"][key] + task["spawning"][key];
+			
+			// check if this task has regular surplus on it
+			if (fulfillment > required)
+			{
+				creeps = findCreepsOfTask(i);
 
+				for (var j in creeps)
+				{
+					var creep = creeps[j];
+					var type = creep.type;
+					if (surplus[type] == undefined) { surplus[type] == []; }
+					surplus[type].push(creep);
+				}
+			}
+			
+			// add demand
 			if (fulfillment < required)
 			{
-				log("Task " + task["name"] + " lacking a '" + key + "', adding to spawn queue");
-				addSpawn([MOVE,MOVE,CARRY,WORK], task["priority"], {"type":key, "task":i}, i);
-				task["spawning"][key]++;
+				//log("Task " + task["name"] + " lacking a '" + key + "', adding to spawn queue");
+				log("Task " + task["name"] + " lacking a '" + key + "'");
+				if (demand[i] == undefined) { demand[i] = {}; }
+				
+				
+				/*addSpawn([MOVE,MOVE,CARRY,WORK], task["priority"], {"type":key, "task":i}, i);
+				task["spawning"][key]++;*/
 			}
 		}
 	}
@@ -166,7 +318,9 @@ function p0Manager()
 		if (creep.name == "0_m") { isMinerAlive = true; }
 		if (creep.name == "0_bm0") { isMinerAlive = true; }
 	}*/
-
+	
+	p0WaitFlagsWatch();
+	p0WaitFlags();
 	p0DetermineTaskFulfillment();
 	p0Spawner();
 	
@@ -193,7 +347,7 @@ function p0Manager()
 	}*/
 }
 
-function addTask(name, priority, types, locations, endType, details)
+function addTask(name, priority, types, locations, endType, blocked, details)
 {
 	var active = {};
 	for (var key in types) { active[key] = 0; }
@@ -208,6 +362,7 @@ function addTask(name, priority, types, locations, endType, details)
 		"spawning":spawning,
 		"locations":locations,
 		"endType":endType,
+		"blocked":blocked,
 		"details":details
 	};
 	Memory.taskQueue.push(task);
