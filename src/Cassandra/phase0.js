@@ -196,10 +196,10 @@ function p0TaskFulfillmentActuator(creep)
 
 function findCreepsOfTask(taskindex)
 {
-	creeps = [];
+	var creeps = [];
 	for (var creepName in Memory.creeps)
 	{
-		creep = Memory.creeps[creepName];
+		var creep = Memory.creeps[creepName];
 		if (creep.taskindex == i)
 		{
 			creeps.push(creep);
@@ -216,6 +216,7 @@ function p0DetermineTaskFulfillment()
 	var surplus = {}; // optionally can draw from, if task priority is higher
 
 	var demand = {};
+	var demandPriority = [];
 	
 	// surplus scan
 	for (var i in Memory.taskQueue)
@@ -249,7 +250,7 @@ function p0DetermineTaskFulfillment()
 						task.active[type]--;
 					}
 				}*/
-				creeps = findCreepsOfTask(i);
+				var creeps = findCreepsOfTask(i);
 				for (var j in creeps)
 				{ 
 					var creep = creeps[j];
@@ -264,7 +265,6 @@ function p0DetermineTaskFulfillment()
 			continue;	
 		}
 
-
 		for (var key in task["types"])
 		{
 			var required = task["types"][key];
@@ -273,7 +273,7 @@ function p0DetermineTaskFulfillment()
 			// check if this task has regular surplus on it
 			if (fulfillment > required)
 			{
-				creeps = findCreepsOfTask(i);
+				var creeps = findCreepsOfTask(i);
 
 				for (var j in creeps)
 				{
@@ -289,7 +289,22 @@ function p0DetermineTaskFulfillment()
 			{
 				//log("Task " + task["name"] + " lacking a '" + key + "', adding to spawn queue");
 				log("Task " + task["name"] + " lacking a '" + key + "'");
+				//if (demand[i] == undefined) { demand[i] = {"PRIORITY":task.priority}; }
 				if (demand[i] == undefined) { demand[i] = {}; }
+				// find place in demand priorites list
+				for (var j = 0; j < demandPriority.length; j++)
+				{
+					if (task.priority >= demandPriority[j].priority)
+					{
+						demandPriority.splice(j, 0, {"priority":task.priority, "id":i});
+						break;
+					}
+				}
+				demand[i][key] = required - fulfillment;
+
+				//debug(demand)
+				console.log(demand);
+				console.log(demandPriority);
 				
 				
 				/*addSpawn([MOVE,MOVE,CARRY,WORK], task["priority"], {"type":key, "task":i}, i);
@@ -297,7 +312,83 @@ function p0DetermineTaskFulfillment()
 			}
 		}
 	}
+
+	// fulfill demand
+	debug("About to fill demand");
+	for (var i = 0; i < demandPriority.length; i++)
+	{
+		var taskID = demandPriority[i].id
+		var taskDemand = demand[taskID];
+		var task = Memory.taskQueue[taskID];
+		console.log(taskDemand);
+	
+		// find out how much of each type of creep this task needs
+		for (var key in taskDemand)
+		{
+			var count = taskDemand[key];
+			log("Task " + task.name + " is lacking " + count + " '" + key + "'...");
+
+			while (count > 0)
+			{
+				// check prioritySurplus first
+				if (prioritySurplus[key] != undefined)
+				{
+					var creep = prioritySurplus[key][0];
+					creep.taskindex = taskID;
+					task.active[key]++;
+					prioritySurplus.splice(0, 1);
+					log(creep.name + " reassigned from priority surplus to task " + task.name, 3);
+					count--;
+					continue;
+				}
+
+				// TODO: assign from surplus
+				//if (surplus
+				
+
+				log("No surplus found to fulfill task " + task.name + " role '" + key + "', adding to spawn queue");
+				addSpawn([MOVE,MOVE,CARRY,WORK], task.priority, {"type":key, "task":taskID}, taskID);
+				task.spawning[key]++;
+				
+			}
+		}
+	}
+
+	
+	/*var highestTask = Memory.taskQueue[0];
+	var highestPriority = highestTask.priority;
+	// find highest priority demand
+	for (var i = 1; i < Memory.taskQueue.length; i++)
+	{
+		if (Memory.taskQueue[i].priority > highestPriority)
+		{
+			highestTask = Memory.taskQueue[i];
+			highestPriority = highestTask.priority;
+		}
+	}*/
+	
+	// assign any remaining priority surplus (to priority demands)
+	for (var key in prioritySurplus)
+	{
+		for (var i = 0; i < prioritySurplus[key].length; i++)
+		{
+			var creep = prioritySurplus[key];
+			for (var j in Memory.taskQueue)
+			{
+				var task = Memory.taskQueue[j];
+				if (task.types.indexOf(key) != -1 && !task.blocked)
+				{
+					creep.taskindex = j;
+					creep.task.active[key]++;
+					log(creep.name + " reassigned from priority surplus to task " + task.name, 3);
+					continue;
+				}
+			}
+		}
+	}
 }
+
+// TODO: check blocks function
 
 function p0Manager()
 {
