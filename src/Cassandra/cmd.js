@@ -35,6 +35,15 @@ global.initialize = function()
 	initializeCassandra();
 }
 
+global.taskList = function()
+{
+	for (var key in Memory.taskQueue)
+	{
+		var task = Memory.taskQueue[key];
+		//log(task.
+	}
+}
+
 global.tier13RequestList = function()
 {
 	for (var entry_i in Memory.Tier13Requests)

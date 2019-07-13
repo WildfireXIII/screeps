@@ -200,7 +200,7 @@ function findCreepsOfTask(taskindex)
 	for (var creepName in Memory.creeps)
 	{
 		var creep = Memory.creeps[creepName];
-		if (creep.taskindex == i)
+		if (creep.taskindex == taskindex)
 		{
 			creeps.push(creep);
 		}
@@ -216,7 +216,7 @@ function p0DetermineTaskFulfillment()
 	var surplus = {}; // optionally can draw from, if task priority is higher
 
 	var demand = {};
-	var demandPriority = [];
+	var demandPriority = []; // collection of objects associating index and priority
 	
 	// surplus scan
 	for (var i in Memory.taskQueue)
@@ -238,27 +238,15 @@ function p0DetermineTaskFulfillment()
 			if (hasSurplus)
 			{
 				// find all creeps associated with this task
-				/*for (var creepName in Memory.creeps)
-				{
-					creep = Memory.creeps[creepName];
-					if (creep.taskindex == i)
-					{
-						var type = creep.type;
-						if (prioritySurplus[type] == undefined) { prioritySurplus[type] == []; }
-						prioritySurplus[type].push(creep);
-						log(creepName + " added to priority surplus list", 3);
-						task.active[type]--;
-					}
-				}*/
 				var creeps = findCreepsOfTask(i);
 				for (var j in creeps)
 				{ 
 					var creep = creeps[j];
 					
 					var type = creep.type;
-					if (prioritySurplus[type] == undefined) { prioritySurplus[type] == []; }
+					if (prioritySurplus[type] == undefined) { prioritySurplus[type] = []; }
 					prioritySurplus[type].push(creep);
-					log(creepName + " added to priority surplus list", 3);
+					log(creep.name + " added to priority surplus list", 3);
 					task.active[type]--;
 				}
 			}
@@ -364,22 +352,47 @@ function p0DetermineTaskFulfillment()
 		}
 	}*/
 	
+
+
+
+
+
+	
+
+	// ----------------- THE PROBLEM:
+	// the below isn't working, it doesn't seem to actually bbe getting "creep
+	// objects"? creep.name is just undefined. Is there a weird thing about
+	// passing around creep objects? (maybe I'm just passing around the memory
+	// and not the object itself)
+
+
+
+
+
+	
+	
 	// assign any remaining priority surplus (to priority demands)
+	inspect(prioritySurplus);
 	for (var key in prioritySurplus)
 	{
 		for (var i = 0; i < prioritySurplus[key].length; i++)
 		{
-			var creep = prioritySurplus[key];
+			var creep = prioritySurplus[key][i];
+			inspect(creep);
+			var assigned = false;
 			for (var j in Memory.taskQueue)
 			{
 				var task = Memory.taskQueue[j];
-				if (task.types.indexOf(key) != -1 && !task.blocked)
+				inspect(task);
+				if (task.types[key] != undefined && !task.blocked)
 				{
 					creep.taskindex = j;
-					creep.task.active[key]++;
+					task.active[key]++;
 					log(creep.name + " reassigned from priority surplus to task " + task.name, 3);
+					assigned = true;
 					continue;
 				}
+				if (assigned) { continue; }
 			}
 		}
 	}
