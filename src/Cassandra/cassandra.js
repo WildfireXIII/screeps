@@ -27,8 +27,8 @@ function initializeMemory()
 
 	if (Memory.debug == null)
 	{
-		log("Setting debug to 'true'");
-		Memory.debug = true;
+		log("Setting debug to '" + START_DEBUG + "'");
+		Memory.debug = START_DEBUG;
 	}
 
 	log("Memory initialized");

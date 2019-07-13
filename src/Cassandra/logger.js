@@ -20,6 +20,11 @@ function announce(text)
 	console.log("<font color='#33DD66'>[" + timestamp() + "] >> " + text + "</font>");
 }
 
+function inspect(object)
+{
+	console.log(JSON.stringify(object));
+}
+
 // priorities: 0 = normal
 // levels: 0 is high level main loop stuff? 1 = default no extras
 //

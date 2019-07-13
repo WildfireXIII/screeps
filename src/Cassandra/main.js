@@ -5,7 +5,9 @@
 // ---- DATA ----
 var rooms = ["sim"];
 var VERSION = "0.1.0";
-var VERSION_DATE = "8/19/2017";
+var VERSION_DATE = "7/13/2019";
+
+var START_DEBUG = false;
 
 // ---- TEMP STORAGE ----
 

@@ -300,12 +300,11 @@ function p0DetermineTaskFulfillment()
 						break;
 					}
 				}
+				// if demand priorities list is empty, just add it?
+				if (demandPriority.length == 0) { demandPriority = [{"priority":task.priority, "id":i}]; }
+				
 				demand[i][key] = required - fulfillment;
 
-				//debug(demand)
-				console.log(demand);
-				console.log(demandPriority);
-				
 				
 				/*addSpawn([MOVE,MOVE,CARRY,WORK], task["priority"], {"type":key, "task":i}, i);
 				task["spawning"][key]++;*/
@@ -320,8 +319,7 @@ function p0DetermineTaskFulfillment()
 		var taskID = demandPriority[i].id
 		var taskDemand = demand[taskID];
 		var task = Memory.taskQueue[taskID];
-		console.log(taskDemand);
-	
+
 		// find out how much of each type of creep this task needs
 		for (var key in taskDemand)
 		{
@@ -349,11 +347,10 @@ function p0DetermineTaskFulfillment()
 				log("No surplus found to fulfill task " + task.name + " role '" + key + "', adding to spawn queue");
 				addSpawn([MOVE,MOVE,CARRY,WORK], task.priority, {"type":key, "task":taskID}, taskID);
 				task.spawning[key]++;
-				
+				count--;
 			}
 		}
 	}
-
 	
 	/*var highestTask = Memory.taskQueue[0];
 	var highestPriority = highestTask.priority;
